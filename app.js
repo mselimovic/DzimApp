@@ -1,4 +1,61 @@
 // storage controller
+const StorageCtrl = (function () {
+  // public methods
+
+  return {
+    storeItem: function (item) {
+      let items;
+      // check if any items in local storage
+      if (localStorage.getItem("items") === null) {
+        items = [];
+        //  push new item
+        items.push(item);
+        // set local storage
+        localStorage.setItem("items", JSON.stringify(items));
+      } else {
+        // get what is already in local storage
+        items = JSON.parse(localStorage.getItem("items"));
+
+        // push new item
+        items.push(item);
+        // reset local storage
+        localStorage.setItem("items", JSON.stringify(items));
+      }
+    },
+    getItemsFromStorage: function () {
+      let items;
+      if (localStorage.getItem("items") === null) {
+        items = [];
+      } else {
+        items = JSON.parse(localStorage.getItem("items"));
+      }
+      return items;
+    },
+    updateItemStorage: function (Updateditem) {
+      let items = JSON.parse(localStorage.getItem("items"));
+
+      items.forEach(function (item, index) {
+        if (Updateditem.id === item.id) {
+          items.splice(index, 1, Updateditem);
+        }
+      });
+      localStorage.setItem("items", JSON.stringify(items));
+    },
+    deleteItemFromStorage: function (id) {
+      let items = JSON.parse(localStorage.getItem("items"));
+
+      items.forEach(function (item, index) {
+        if (id === item.id) {
+          items.splice(index, 1);
+        }
+      });
+      localStorage.setItem("items", JSON.stringify(items));
+    },
+    clearItemsFromStorage: function () {
+      localStorage.removeItem("items");
+    },
+  };
+})();
 
 // item controller
 const ItemCtrl = (function () {
@@ -11,11 +68,12 @@ const ItemCtrl = (function () {
 
   // data structure / state
   const data = {
-    items: [
-      // {id: 0, name: 'Steak dinner', calories: 1200},
-      // {id: 1, name: 'Cookie', calories: 400},
-      // {id: 2, name: 'Eggs', calories: 300}
-    ],
+    // items: [
+    //   // {id: 0, name: 'Steak dinner', calories: 1200},
+    //   // {id: 1, name: 'Cookie', calories: 400},
+    //   // {id: 2, name: 'Eggs', calories: 300}
+    // ],
+    items: StorageCtrl.getItemsFromStorage(),
     currentItem: null,
     totalCalories: 0,
   };
@@ -215,7 +273,7 @@ const UICtrl = (function () {
 
 // app controller
 
-const AppCtrl = (function (ItemCtrl, UICtrl) {
+const AppCtrl = (function (ItemCtrl, StorageCtrl, UICtrl) {
   // load event listeners
   const loadEventListeners = function () {
     // get UI selectors
@@ -262,6 +320,9 @@ const AppCtrl = (function (ItemCtrl, UICtrl) {
       const totalCalories = ItemCtrl.getTotalCalories();
       // add total calories to the UI
       UICtrl.showTotalCalories(totalCalories);
+
+      // store in localstorage
+      StorageCtrl.storeItem(newItem);
       //  clear fields
       UICtrl.clearInput();
     }
@@ -304,6 +365,9 @@ const AppCtrl = (function (ItemCtrl, UICtrl) {
     const totalCalories = ItemCtrl.getTotalCalories();
     // add total caloreies to UI
     UICtrl.showTotalCalories(totalCalories);
+    // update local storage
+    StorageCtrl.updateItemStorage(Updateditem);
+
     UICtrl.clearEditState();
 
     e.preventDefault();
@@ -321,6 +385,10 @@ const AppCtrl = (function (ItemCtrl, UICtrl) {
     const totalCalories = ItemCtrl.getTotalCalories();
     // add total caloreies to UI
     UICtrl.showTotalCalories(totalCalories);
+
+    // delete from local storage
+    StorageCtrl.deleteItemFromStorage(currentItem.id);
+
     UICtrl.clearEditState();
     e.preventDefault();
   };
@@ -334,6 +402,8 @@ const AppCtrl = (function (ItemCtrl, UICtrl) {
     ItemCtrl.clearAllItems();
     // remove from UI
     UICtrl.removeItems();
+    // clear from local storage
+    StorageCtrl.clearItemsFromStorage();
     // hide UL
     UICtrl.hideList();
   };
@@ -361,7 +431,7 @@ const AppCtrl = (function (ItemCtrl, UICtrl) {
       loadEventListeners();
     },
   };
-})(ItemCtrl, UICtrl);
+})(ItemCtrl, StorageCtrl, UICtrl);
 
 // Initialize App
 
